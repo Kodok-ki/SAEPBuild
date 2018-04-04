@@ -1,0 +1,178 @@
+09/07/2017
+==================
+-Due to the Unity update: the terrain textures had an ugly shine appended to it. Fixed by setting 'Reflection Probe Usage' to 0 in the debug menu
+ (for Terrain).
+-Had to 2 kinds of errors appear when I tried playing what I'd made:
+ 1. Speedtree materials needed to be regenerated. Easily fixed at the click of a button
+ 2. The shader of the water prefab used for the lake constantly generated "Missing property" errors due to the Unity update the water was replaced
+    with the pro version which fixed it.
+-CPU maxed out (Ryzen 1700 at base clock!!) so auto-bake had to be turned off 
+
+10/07/2017
+==================
+-Started to fix implementation of double jump.
+ -Started by resetting the code to what was included in the Standard Assets (plus implementations of collision used for 'picking' items up)
+
+11/07/2017
+===================
+-Found the start of the 3rd person char. movement 'pipeline'. Starts in ThirdPersonUserControl.cs which does a call of Move()...
+ EDIT(26/07/17): ...in FixedUpdate() i.e. every fixed framerate frame.
+-Labelled ThirdPersonUserControl.cs with the next step?
+
+26/07/2017
+===================
+-Implemented initial draft of airJump() which currently allows players to jump in the air (infinitely) in the direction of the initial jump.
+-Next step is to focus on limiting to only two jumps before allowing the 2nd jump to be in the direction of the camera (i.e. allow direction
+ change with the 2nd jump)
+ -To start with, a getter for m_IsGrounded was created to send to ThirdPersonUserControl.
+ -Might need to move the dJump check to FixedUpdate()
+
+24/01/2018
+===================
+-Implementing a "ground-checking" method in the 'ThirdPersonUserControl' class in an attempt to finally solve the double-jump problem. i.e. finally using raycasts.
+   -Lines 87-96
+
+29/01/2018
+===================
+-Removed airJump() from ThirdPersonCharacter.cs
+
+30/01/2018
+===================
+-Renamed "ground-checking" method in the 'ThirdPersonUserControl' class to "CheckforDoubleJump()"
+-Changing dJump variable into ability to double Jump
+
+31/01/2018
+====================
+-Modified FixedUpdate() and CheckforDoubleJump() to fit the new purpose of variable 'dJump'
+
+06/02/2018
+====================
+-Continued modifying FixedUpdate(), CheckforDoubleJump() and airJump(). Resulted in only a single jump as opposed to a double or infinite jump.
+	Need to test for execution of line where input of "Jump" button is asked for. Ask for input likely needs to be shifted to Update().
+
+08/02/2018
+====================
+-Still working on double jump problem.
+
+12/02/2018
+====================
+-Still working on double jump problem.
+-Added a new bool field in 'ThirdPersonCharacter.cs' called 'doublejumped' (might require renaming)
+	-Check for the field 'doublejumped' included in the 'HandleGroundMovement()' method.
+-CheckforDoubleJump() in 'ThirdPersonUserControl.cs' is now a simple method that checks whether or not the player is on the ground. Thus, method requires renaming.
+	-Changed Update() so that input is conditional for single and double (air) jumps. Not sure if necessary.
+-Successful double jump. Still buggy, requires actual physics for the 2nd jump to replace the dummy vector put in place for testing.
+
+13/02/2018
+====================
+-Leaving 'ThirdPersonCharacter.doubleJumped' alone
+
+
+16/02/2018
+====================
+-Fixing double jump physics.
+-Jumping procedure works purely through the airJump() method. Discovered through debugging. 
+-Double jump fails when applied jumping vector is upwards of (x, 30, 30).
+	-Double jump succeeds very infrequently when trying to multiply the jump direction 	
+-The conditionals in 'ThirdPersonUserControl.cs' are confirmed to be necessary.
+-Air jump now proceeds in direction of main camera (m_CamForward).
+	-Need to update animator so that the player character turns when an air jump is performed from a standing jump
+
+
+19/02/2018
+====================
+-Animation fixes for double jumping put on hold. Focusing on other parts.
+-Changed the input for airJump() to use a composition of the m_Move vector and the Vector3.up vector so that players can change their jump distance
+ based on how much the direction key is pressed down (using GetAxis() to read input).
+-Attempted to implement a sprinting feature by adding a boolean in 'ThirdPersonUserControl.cs' and carrying it through the Move() methods.
+	-The m_Move vector gets normalised so needs to be changed.
+	-Change implemented. m_Move vector is still normalised but then multiplied afterwards.
+-Made use of the debug log to confirm that the correct 'sprinting' input in passed through in 'ThirdPersonUserControl.cs'
+	-Again, using the debug log, can confirm the 'move' Vector3 is properly multiplied when the Shift key is held down and when it is not.
+	 Therefore, the changes required are from the animation method onwards.
+
+20/02/2018
+====================
+-The animation controls are perfectly fine unless I require additional animations for sprinting which I will not implement.
+-Change required to implement sprinting was simply multiplying the Rigidbody's (m_Rigidbody's) velocity in the Move() method in 'ThirdPersonCharacter.cs'
+-Now an implementation of a sprint/stamina bar is required.
+-Tried attaching a slider to the player character's position using WorldToScreenPoint() but it moves around too much when the player character moves so
+ so settling for a slider in the bottom-left corner of the UI menu. 
+	-Or not, by finding the player character's transform position using the script, a fixed position could be set using manual coordinate inputs (in the 
+	 Unity inspector) such that the slider appears to be permanently above the player character's head.
+	-The stamina script is essentially useless and needs to be deleted.
+-Now need to actually implement the slider such that it works with the sprinting feature.
+
+26/02/2018
+=====================
+-Using a floating point-based stamina system.
+-Attached the stamina bar to 'ThirdPersonCharacter.cs' as a public variable and using a max value of 100f.
+	-Added UnityEngine.UI and UnityStandardAssets.CrossPlatformInput libraries to 'ThirdPersonCharacter.cs' class
+-Created a new method specifically for sprinting (called Sprinting()).
+-Through some testing, Move() is confirmed to be called every frame.
+-After doing some (minor) testing, I've concluded that the sprint and stamina system has been successfully implemented.
+
+27/02/2018
+=====================
+-Stamina now recovers faster when the PC is 'm_Rigidbody.velocity' is zero.
+	-There's a delay from when the PC stops moving and 'm_Rigidbody.velocity' is actually zero which works as the PC 'slowly catching his breath.'
+*Should do some coroutine practice but not sure what to do.
+
+16/03/2018
+=====================
+-Attempted to do coroutines by fading the crystals in and out, and/or bobbing them up and down.
+-Encountered a problem of trying to reference the crystals' "SpriteRenderers".
+
+17/03/2018
+=====================
+-Problem discovered. By compiling a list of GameObjects with the tag "Crystal" the empty parent, "Crystals"
+ was included in the list - thus, generating the error since "Crystals" does not have any components except for 
+ a (redundant) transform and the script for controlling the behaviour of the crystals ("Crystal Behavior.cs").
+-After the untagging the empty parent ("Crystals"), the problem has disappeared.
+-However, the crystals are not changing, i.e. the coroutine is not working as intended.
+-Realised a problem. Using a foreach loop means only iterating over a list of duplicates of the objects,
+ rather than the objects themselves.
+-Need to also consider the possibility of inactive crystals (crystals already obtained by the player) being 
+ appended to the list.
+-Tried currently method of referencing a crystal's colour (alpha) in a simple for loop in the Update() method
+ on the blue crystal but the crystal's colour still remains unaffected. 
+
+19/03/2018
+=====================
+-Need to fix the crystal behaviour problem.
+-Looking to export an initial build by the end of this session.
+-Tried a direct reference to the "blue crystal's" colour
+ >crys.GetComponent<SpriteRenderer>().color = Color.red;
+ -The crystal turned red as it should've.
+-Current solution to this problem is to create a temporary variable containing the crystal's colour, modifying it
+ and then re-assigning the crystal's colour with the temporary variable.
+-Looking at the code for the coroutine, the problem was actually that the alpha level was considered to be
+ 256 levels (int 0-255) when it's actually a floating point value from 0 to 1.
+ -Having fixed this, the crystals now enter a cycle where they go from opaque (alpha = 1) to transparent (alpha = 0)
+  as they should according to the code.
+-Implemented code to both materialise and fade the crystals (turn them from transaparent to opaque, vice versa)
+ -It works as intended when the coroutines are used independent of each other but transitioning from one to other
+  requires fixing.
+-At the current stage, the independent coroutines work only if the 'faded' boolean is of the opposite value,
+ i.e. the if statement is not re-entered.
+-The StopCoroutine() function does not seem to have any effect if included in the if statement.
+ -Could possibly change the boolean at the end of the coroutine sequence (in the coroutine function by using an
+  if statement and counting the crystals/alpha level changes).
+-GameObject.FindGameObjectsWithTag() only returns active GameObjects so no need for extra code to account for 
+ inactive "crystals."
+
+20/03/2018
+====================
+-Proposing that the coroutines are never called in Update() but rather in Start() before endlessly calling each coroutine
+ in eachother's implementation. But then would need to consider inactive crystals (when a crystal is obtained by the player).
+-Attempting to compress code into one function using linear interpolation (Lerp).
+-Perhaps calling CrystalBehaviour.Start() might solve any issues with inactive crystals.
+-Since 'CrystalBehaviour.cs' is an original script, the member variables were renamed to follow a convention: "m_*"
+-Using the debug message window, it has been determined that code placed after the for loop containing the coroutine
+ is executed after the coroutine is complete, that includes code after StopCoroutine().
+-Using the lerp and calling the function at the end of the Fade() function works but only a for few cycles as the number of 
+ processes increase exponentially leading to a freeze. This might be due to the for loops used to iterate over the crystals.
+ -Therefore opting to attach the script to indivdual crystals.
+-Modified script so that it would work by attaching the script to the individual crystals.
+ -Works without any problem. The coroutines are run in a linear fashion so there are no performance problems.
+-Attempting to bake a low-res lightmap. Unlikely to work due to the amount of terrain used.
